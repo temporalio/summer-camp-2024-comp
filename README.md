@@ -44,6 +44,6 @@ The 3 winners will receive tickets to Replay in Seattle in September, and some S
 
 The 5 runners up will receive Summer Camp swag.
 
-All entries meeting our code of conduct will be mentioned in a blog post announcing the winners on August 2nd.
+All entries meeting our [code of conduct](https://temporal.io/code-of-conduct) will be mentioned in a blog post announcing the winners on August 2nd.
 
 Enjoy!

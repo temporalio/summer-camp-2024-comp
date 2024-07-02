@@ -18,6 +18,8 @@ To give you a feel for the kind of things we imagined when brainstorming, in no 
 - Play with error responses (for example: "signal not defined")
 - Trigger specific history events then fetch the history
 
+We've also included two simple Go SDK samples: `./race` and `./scavenger`.
+
 ## Entering
 
 Submissions should be public Github Repos, with all code and a basic README to explain how to run the Workflow. Please also include a basic description of how it works in the README. If your workflow has some surprising/unintuitive behaviour, feel free to leave the outcome as a surprise...

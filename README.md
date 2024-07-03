@@ -22,9 +22,9 @@ We've also included two simple Go SDK samples: `./race` and `./scavenger`.
 
 ## Entering
 
-Submissions should be public forks of this repo on Github, with your complete code and a basic README to explain how to run the Workflow. Please also include a basic description of how your entry works in the README. If your workflow has some surprising/unintuitive behaviour, feel free to leave the outcome as a surprise...
+Submissions should be PRs against this repo on Github, with your complete code and a basic README to explain how to run the Workflow. Please also include a basic description of how your entry works in the README. If your workflow has some surprising/unintuitive behaviour, feel free to leave the outcome as a surprise...
 
-Once you have completed your code, please submit your entry to the competition by using the [entry form].
+Once you have completed your code, please *submit your entry to the competition* by using the [entry form]. PRs for which there has been no submission form received will not be considered for the competition.
 
 Deadline for entries, to allow time for judging, is 15th July, better get cracking!
 

@@ -3,8 +3,13 @@ import asyncio
 from temporalio.client import Client
 from temporalio.worker import Worker
 
-from activities import create_folder, create_gif_from_images, generate_image
-from workflows import AlphabetImageWorkflow, GifWorkflow
+from activities import (
+    create_folder,
+    create_gif_from_images,
+    generate_image,
+    read_and_parse_file,
+)
+from workflows import AlphabetImageWorkflow
 
 interrupt_event = asyncio.Event()
 
@@ -14,8 +19,13 @@ async def main():
     worker = Worker(
         client,
         task_queue="alphabet-image-workflow-task-queue",
-        workflows=[AlphabetImageWorkflow, GifWorkflow],
-        activities=[generate_image, create_folder, create_gif_from_images],
+        workflows=[AlphabetImageWorkflow],
+        activities=[
+            generate_image,
+            create_folder,
+            create_gif_from_images,
+            read_and_parse_file,
+        ],
     )
 
     print("\nWorker started, ctrl+c to exit\n")

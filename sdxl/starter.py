@@ -2,30 +2,21 @@ import asyncio
 
 from temporalio.client import Client
 
-from workflows import AlphabetImageWorkflow, GifWorkflow
+from workflows import AlphabetImageWorkflow
 
 
 async def main() -> str:
     client = await Client.connect("localhost:7233")
-    letters: str = "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
 
-    for letter in letters:
-        workflow_id = f"alphabet-image-workflow-id-{letter}"
-        result = await client.execute_workflow(
-            AlphabetImageWorkflow.run,
-            letter,
-            id=workflow_id,
-            task_queue="alphabet-image-workflow-task-queue",
-        )
-        print(f"Result for {letter}: {result}")
-    print("All images executed successfully.")
-    await client.execute_workflow(
-        GifWorkflow.run,
-        id="gif-workflow",
+    workflow_id = "alphabet-image-workflow-id"
+    result = await client.execute_workflow(
+        AlphabetImageWorkflow.run,
+        id=workflow_id,
         task_queue="alphabet-image-workflow-task-queue",
     )
+    print(f"Result: {result}")
 
-    return print("Gif created successfully.")
+    return "Gif created successfully."
 
 
 if __name__ == "__main__":

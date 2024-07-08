@@ -1,4 +1,5 @@
 import os
+import random
 from dataclasses import dataclass
 
 import imageio.v3 as iio
@@ -13,10 +14,11 @@ LORA_WEIGHT_NAME = "toy_face_sdxl.safetensors"
 ADAPTER_NAME = "toy"
 FOLDER_NAME = "alphabet_images"
 LORA_SCALE = 8
-INFERENCE_STEPS = 50
+INFERENCE_STEPS = 10
 GUIDANCE_SCALE = 1
 IMAGE_HEIGHT = 512
 IMAGE_WIDTH = 512
+FILE_NAME = "file.txt"
 
 # Set environment variable for CUDA memory management
 os.environ["PYTORCH_CUDA_ALLOC_CONF"] = "expandable_segments:True"
@@ -28,9 +30,9 @@ try:
     ).to("cuda")
     print("Stable Diffusion pipeline loaded")
     pipe.load_lora_weights(
-        "CiroN2022/toy-face",
-        weight_name="toy_face_sdxl.safetensors",
-        adapter_name="toy",
+        LORA_WEIGHTS,
+        weight_name=LORA_WEIGHT_NAME,
+        adapter_name=ADAPTER_NAME,
     )
     # Enable attention slicing for memory efficiency
     pipe.enable_attention_slicing()
@@ -59,6 +61,18 @@ async def create_folder() -> str:
 
 
 @activity.defn
+async def read_and_parse_file() -> list:
+    try:
+        with open(FILE_NAME, "r") as file:
+            letters = file.read().strip()
+            activity.logger.info(f"Letters read from {FILE_NAME}: {letters}")
+            return list(letters)
+    except Exception as e:
+        activity.logger.error(f"Error reading file: {e}")
+        raise
+
+
+@activity.defn
 async def generate_image(input: GenerateImageInput) -> str:
     letter = input.letter
     activity.logger.info(f"Running activity with parameter {letter}")
@@ -66,9 +80,13 @@ async def generate_image(input: GenerateImageInput) -> str:
     # Clear CUDA cache
     torch.cuda.empty_cache()
 
+    # Generate a random seed for each image
+    random_seed = random.randint(0, 9999)
+    activity.logger.info(f"Using random seed: {random_seed}")
+
     # Generate the image based on the prompt
-    prompt = f"Highly detailed toy face of a hacker wearing a dark hoodie with the letter {letter} prominently displayed on the front."
-    generator = torch.Generator(device="cuda").manual_seed(2023)
+    prompt = f"toy_face highly detalied letter {letter} prominently displayed."
+    generator = torch.Generator(device="cuda").manual_seed(random_seed)
     result = pipe(
         prompt=prompt,
         num_inference_steps=INFERENCE_STEPS,
@@ -78,7 +96,8 @@ async def generate_image(input: GenerateImageInput) -> str:
         generator=generator,
     )
     image = result.images[0]
-    activity.logger.info(f"Image generated for letter {letter}")
+    activity.heartbeat(f"Image generated for letter {letter}")
+    print(f"Image generated for letter {letter}")
 
     # Save the image to the folder
     image_path = os.path.join(FOLDER_NAME, f"{letter}.png")

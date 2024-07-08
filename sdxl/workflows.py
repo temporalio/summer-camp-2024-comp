@@ -8,29 +8,32 @@ with workflow.unsafe.imports_passed_through():
         create_folder,
         create_gif_from_images,
         generate_image,
+        read_and_parse_file,
     )
 
 
 @workflow.defn
 class AlphabetImageWorkflow:
     @workflow.run
-    async def run(self, letter: str) -> str:
+    async def run(self) -> str:
         await workflow.execute_activity(
             create_folder,
             start_to_close_timeout=timedelta(seconds=10),
         )
 
-        return await workflow.execute_activity(
-            generate_image,
-            GenerateImageInput(letter=letter),
-            start_to_close_timeout=timedelta(hours=2),
+        letters = await workflow.execute_activity(
+            read_and_parse_file,
+            start_to_close_timeout=timedelta(seconds=10),
         )
 
+        for letter in letters:
+            await workflow.execute_activity(
+                generate_image,
+                GenerateImageInput(letter=letter),
+                start_to_close_timeout=timedelta(minutes=20),
+                heartbeat_timeout=timedelta(seconds=45),
+            )
 
-@workflow.defn
-class GifWorkflow:
-    @workflow.run
-    async def run(self) -> str:
         return await workflow.execute_activity(
             create_gif_from_images,
             start_to_close_timeout=timedelta(minutes=10),

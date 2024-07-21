@@ -3,7 +3,7 @@
 Having to output the letters A-Z reminded me of CodeForces, a site where programmers can work on competitive programming problems. 
 Contests generally have a certain number of problems in increasing difficulty, labeled A, B, C and so on.
 
-This submission uses Temporal as well as ChatGPT to generate and test human or AI-generated solutions, and then output their successfulness. 
+This submission uses Temporal as well as ChatGPT to generate and test human or AI-generated solutions, and then output whether the given code passes test cases. 
 
 ## Installation and Setup
 

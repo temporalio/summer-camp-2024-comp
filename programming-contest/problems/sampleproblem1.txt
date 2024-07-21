@@ -1,0 +1,20 @@
+Description:
+
+Write a program that solves the "FizzBuzz" problem.
+
+Requirements:
+
+The function should take a single integer input N.
+For each number from 1 to N (inclusive):
+If the number is divisible by 3, print "Fizz".
+If the number is divisible by 5, print "Buzz".
+If the number is divisible by both 3 and 5, print "FizzBuzz".
+If the number is not divisible by either 3 or 5, print the number itself.
+
+Input:
+
+A single integer N.
+
+Output:
+
+Print each number or the corresponding word ("Fizz", "Buzz", or "FizzBuzz") on a new line. Do not print any prompts or error logs.

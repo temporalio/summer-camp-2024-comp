@@ -1,0 +1,21 @@
+[tool.poetry]
+name = "battleship"
+version = "0.1.0"
+description = "A game of alphabet battleshit simulated through temporal workflows"
+authors = ["Catarina Silva <catarina.cruz.csilva.com>"]
+readme = "README.md"
+
+[tool.poetry.dependencies]
+python = "^3.9"
+
+click = "8.1.7"
+pydantic = ">=1.0.0,<2.0.0"
+temporalio = "^1.6.0"
+
+[tool.poetry.group.dev.dependencies]
+isort = "^5.13.2"
+black = "^24.4.2"
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"

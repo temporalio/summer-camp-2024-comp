@@ -38,8 +38,9 @@ These are the main features used from temporal:
 1. **Clone the repository:**
 
    ```bash
-   git clone https://github.com/your-username/alphabet-battleship-challenge.git
-   cd alphabet-battleship-challenge
+   git clone https://github.com/CatarinaSilva/summer-camp-2024-comp
+   cd summer-camp-2024-comp/battleship
+   
    ```
 
 2. Create virtual environment

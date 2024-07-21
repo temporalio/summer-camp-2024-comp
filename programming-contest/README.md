@@ -33,11 +33,11 @@ Corresponding `<problem_name>.in` and `<problem_name>.out` files should be put i
 
 ## Explanation
 
-**Activities**:
+### **Activities**:
    - `DefaultSolutionActivity`: Returns one of the pre-written solutions to the problem, of which some will pass and others will fail
    - `ChatGPTSolutionActivity`: Returns a solution to the problem from ChatGPT
    - `TrySolutionActivity`: Tries to run the code with the test case input, then returns the output
    - `CheckOutputActivity`: Checks the actual output with the expected output, returns whether they match
-**Workflow**:
+### **Workflow**:
    - `SolveProblemWorkflow`: Solves a single problem, will return the elapsed time and the solution code if the solution is valid
    - `ProgrammingContestWorkflow`: Generates a programming contest with 26 problems, then prints the results

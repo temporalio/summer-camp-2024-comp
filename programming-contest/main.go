@@ -19,14 +19,17 @@ import (
 	"go.temporal.io/sdk/workflow"
 )
 
+//////////////////////////////
+// PUT OPENAI API TOKEN HERE
+//////////////////////////////
+
+const apiKey = "<OpenAI ChatGPT Token>"
+
 var a *Activities
-
-// Activities
-
 type Activities struct{}
 
-// Alternative to GetCodeFromChatGPTActivity if you have no tokens
-func (a *Activities) ReturnRandomResultActivity(ctx context.Context, problemName string) (string, error) {	
+// Alternative to ChatGPTSolutionActivity if you have no tokens
+func (a *Activities) DefaultSolutionActivity(ctx context.Context, problemName string) (string, error) {	
 	// Pick a random solution that might pass or fail
     randNum := rand.Intn(2)
 	stringName := ""
@@ -45,14 +48,14 @@ func (a *Activities) ReturnRandomResultActivity(ctx context.Context, problemName
 }
 
 // Requests a solution from ChatGPT
-func (a *Activities) GetCodeFromChatGPTActivity(ctx context.Context, apiKey string, problemName string) (string, error) {
+func (a *Activities) ChatGPTSolutionActivity(ctx context.Context, apiKey string, problemName string) (string, error) {
 	client := openai.NewClient(apiKey)
 	content, err := os.ReadFile("problems/"+problemName + ".txt")
 	if err != nil {
 		return "",err
 	}
 
-	prompt := fmt.Sprintf("Write a Python program to solve this problem:\n\n%s.", string(content))
+	prompt := fmt.Sprintf("Write a Python program to solve this problem, do not print any prompts or error logs: \n\n%s.", string(content))
 	resp, err := client.CreateChatCompletion(ctx, openai.ChatCompletionRequest{
 		Model: "gpt-3.5-turbo",
 		Messages: []openai.ChatCompletionMessage{
@@ -84,13 +87,12 @@ func (a *Activities) TrySolutionActivity(ctx context.Context, code string, probl
     }
     defer os.Remove(tmpFile.Name()) 
 
-
 	if _, err := tmpFile.Write([]byte(code)); err != nil {
         return "", fmt.Errorf("failed to write to file: %w", err)
     }
     tmpFile.Close()
 
-    // Create a command to run the Go code
+	// execute python file
     cmd := exec.Command("python3", tmpFile.Name())
 
     // input
@@ -108,7 +110,6 @@ func (a *Activities) TrySolutionActivity(ctx context.Context, code string, probl
     return out.String(), nil
 }
 
-
 func (a *Activities) CheckOutputActivity(ctx context.Context, output string, problemName string) (bool, error) {
 	expectedOutput, err := os.ReadFile("testcases/" + problemName + ".out")
 	if err != nil {
@@ -118,7 +119,62 @@ func (a *Activities) CheckOutputActivity(ctx context.Context, output string, pro
 	return string(expectedOutput) == string(output), nil
 }
 
-func ProgrammingContest(ctx workflow.Context, problemNames []string, api string) (string, error) {
+type SolveProblemResult struct {
+	Code     string
+	Elapsed  time.Duration
+}
+
+func SolveProblemWorkflow(ctx workflow.Context, APIKey, problemName string) (SolveProblemResult, error) {
+	logger := workflow.GetLogger(ctx)
+
+	ao := workflow.ActivityOptions{
+		StartToCloseTimeout: time.Hour,
+	}
+	ctx = workflow.WithActivityOptions(ctx, ao)
+	startTime := workflow.Now(ctx)
+
+	var code string
+	var err error
+
+	// grabs a possible solution for the given problem
+	if(APIKey != "<OpenAI ChatGPT Token>"){
+		err = workflow.ExecuteActivity(ctx, a.ChatGPTSolutionActivity, APIKey, problemName).Get(ctx, &code)
+		if err != nil {
+			logger.Error("GetCodeFromChatGPTActivity failed", "Error", err)
+			return SolveProblemResult{}, err
+		}
+	}else{
+		err = workflow.ExecuteActivity(ctx, a.DefaultSolutionActivity, problemName).Get(ctx, &code)
+		if err != nil {
+			logger.Error("ReturnResultActivity failed", "Error", err)
+			return SolveProblemResult{}, err
+		}
+	}
+
+	var output string
+    err = workflow.ExecuteActivity(ctx, a.TrySolutionActivity, code, problemName).Get(ctx, &output)
+    if err != nil {
+        logger.Error("TrySolutionActivity failed", "Error", err)
+        return SolveProblemResult{}, err
+    }
+
+	var success bool
+    err = workflow.ExecuteActivity(ctx, a.CheckOutputActivity, output, problemName).Get(ctx, &success)
+    if err != nil {
+        logger.Error("CheckOutputActivity failed", "Error", err)
+        return SolveProblemResult{}, err
+    }
+
+	if(success){
+		endTime := workflow.Now(ctx)
+		elapsedTime := endTime.Sub(startTime)
+		return SolveProblemResult{Code: code, Elapsed: elapsedTime}, nil
+	}else{
+		return SolveProblemResult{}, nil
+	}
+}
+
+func ProgrammingContestWorkflow(ctx workflow.Context, problemNames []string, api string) (string, error) {
 	solvedCount := 0
 	solutionMap := make(map[string]string)
 
@@ -126,7 +182,7 @@ func ProgrammingContest(ctx workflow.Context, problemNames []string, api string)
 	for i := 0; i < 26; i++ {
 		// Solves each problem in problemNames, if less than 26, problems may be solved multiple times
 		problemName := problemNames[i%len(problemNames)]
-		we := workflow.ExecuteChildWorkflow(ctx, SolveProblem, api, problemName)
+		we := workflow.ExecuteChildWorkflow(ctx, SolveProblemWorkflow, api, problemName)
 
 		var result SolveProblemResult
 
@@ -155,60 +211,6 @@ func ProgrammingContest(ctx workflow.Context, problemNames []string, api string)
 	return sb.String(), nil
 }
 
-type SolveProblemResult struct {
-	Code     string
-	Elapsed  time.Duration
-}
-
-func SolveProblem(ctx workflow.Context, APIKey, problemName string) (SolveProblemResult, error) {
-	logger := workflow.GetLogger(ctx)
-
-	ao := workflow.ActivityOptions{
-		StartToCloseTimeout: time.Hour,
-	}
-	ctx = workflow.WithActivityOptions(ctx, ao)
-	startTime := workflow.Now(ctx)
-
-	var code string
-
-	// Uncomment this activity to use ChatGPT
-
-    // err := workflow.ExecuteActivity(ctx, a.GetCodeFromChatGPTActivity, APIKey, problemName).Get(ctx, &code)
-    // if err != nil {
-    //     logger.Error("GetCodeFromChatGPTActivity failed", "Error", err)
-    //     return SolveProblemResult{}, err
-    // }
-
-	// Comment this activity when using ChatGPT
-    err := workflow.ExecuteActivity(ctx, a.ReturnRandomResultActivity, problemName).Get(ctx, &code)
-    if err != nil {
-        logger.Error("ReturnResultActivity failed", "Error", err)
-        return SolveProblemResult{}, err
-    }
-
-	var output string
-    err = workflow.ExecuteActivity(ctx, a.TrySolutionActivity, code, problemName).Get(ctx, &output)
-    if err != nil {
-        logger.Error("TrySolutionActivity failed", "Error", err)
-        return SolveProblemResult{}, err
-    }
-
-	var success bool
-    err = workflow.ExecuteActivity(ctx, a.CheckOutputActivity, output, problemName).Get(ctx, &success)
-    if err != nil {
-        logger.Error("CheckOutputActivity failed", "Error", err)
-        return SolveProblemResult{}, err
-    }
-
-	if(success){
-		endTime := workflow.Now(ctx)
-		elapsedTime := endTime.Sub(startTime)
-		return SolveProblemResult{Code: code, Elapsed: elapsedTime}, nil
-	}else{
-		return SolveProblemResult{}, nil
-	}
-}
-
 func main() {
 	c, err := client.Dial(client.Options{
 		HostPort: client.DefaultHostPort,
@@ -222,13 +224,10 @@ func main() {
 		log.Fatalln("Unable to create client", err)
 	}
 	defer c.Close()
-	
-	// PUT OPENAI API TOKEN HERE
-	api := "<OpenAI ChatGPT Token>"
 
 	w := worker.New(c, "SolveProblem", worker.Options{})
-	w.RegisterWorkflow(ProgrammingContest)
-	w.RegisterWorkflow(SolveProblem)
+	w.RegisterWorkflow(ProgrammingContestWorkflow)
+	w.RegisterWorkflow(SolveProblemWorkflow)
 	activities := &Activities{}
 	w.RegisterActivity(activities)
 	err = w.Start()
@@ -241,9 +240,14 @@ func main() {
 		TaskQueue: "SolveProblem",
 	}
 
-	problemNames := []string{"sampleproblem1", "sampleproblem2"}
+	// Find all the problems in the ./problems directory
+	problemNames := []string{}
+	files, _ := os.ReadDir("problems")
+    for _, file := range files {
+        problemNames = append(problemNames,  strings.TrimSuffix(file.Name(), ".txt"))
+    }
 
-	we, err := c.ExecuteWorkflow(context.Background(), workflowOptions, ProgrammingContest, problemNames, api)
+	we, err := c.ExecuteWorkflow(context.Background(), workflowOptions, ProgrammingContestWorkflow, problemNames, apiKey)
 	if err != nil {
 		log.Fatalln("Unable to execute workflow", err)
 	}

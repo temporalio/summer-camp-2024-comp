@@ -15,7 +15,11 @@ that implements a workflow that outputs a set of alphabet letters by pitting two
 ## Project Description
 
 The Alphabet Battleship Challenge is a submission of the [Temporal Summer Camp 2024](https://temporal.io/blog/announcing-the-temporal-summer-camp-2024-competition) 
-that implements a workflow that outputs a set of alphabet letters by pitting two players against each other in a game of battleship
+that implements a workflow that outputs a set of alphabet letters by pitting two players against each other in a game of battleship.
+
+The workflow was initially modeled as shown below:
+
+![workflows](media/flow-diagram.png)
 
 ## Features
 

@@ -1,0 +1,7 @@
+diffusers
+transformers
+accelerate
+hf_transfer
+temporalio
+peft
+imageio

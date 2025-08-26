@@ -1,0 +1,15 @@
+Description:
+
+Write a program that adds two numbers and prints the sum.
+
+Requirements:
+
+The function should take in two integer numbers X and Y. Print the sum.
+
+Input:
+
+Two integers X and Y, on separate lines.
+
+Output:
+
+Print the sum of X and Y. Do not print any prompts or error logs.
